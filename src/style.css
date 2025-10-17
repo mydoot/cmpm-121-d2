@@ -3,3 +3,10 @@
   vertical-align: top;
   border: 1px solid salmon;
 }
+
+.canvas {
+  height: 256;
+  border: 5px solid black;
+  /* border-color: black; */
+  border-radius: 8px;
+}
