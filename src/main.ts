@@ -3,13 +3,17 @@ import "./style.css";
 document.body.innerHTML = `
   <h1>Sticker Sketchpad</h1>
 
+  <div class="Canvas"></div>
+  <div class="Commands"></div>
+  <div class="Tools"></div>
 `;
 
+const canvasContainer: Element = document.querySelector(".Canvas")!;
 const canvas = document.createElement("canvas");
 canvas.width = 256;
 canvas.height = 256;
 canvas.className = "canvas";
-document.body.appendChild(canvas);
+canvasContainer.appendChild(canvas);
 
 const ctx = canvas.getContext("2d")!;
 
@@ -21,6 +25,8 @@ let currentLineCommand: LineCommand | null = null;
 
 type Point = { x: number; y: number };
 
+let markerSize: number = 1;
+
 const observer: EventTarget = new EventTarget();
 
 interface Drawable {
@@ -29,12 +35,14 @@ interface Drawable {
 
 class LineCommand implements Drawable {
   public points: Point[];
+  public thickness: number;
 
-  constructor(x: number, y: number) {
+  constructor(x: number, y: number, size: number) {
     this.points = [{ x, y }];
+    this.thickness = size;
   }
   display(ctx: CanvasRenderingContext2D): void {
-
+    ctx.lineWidth = this.thickness;
     ctx.beginPath();
     const { x, y } = this.points[0];
     ctx.moveTo(x, y);
@@ -46,6 +54,7 @@ class LineCommand implements Drawable {
   draw(x: number, y: number): void {
     this.points.push({ x, y });
   }
+
 }
 
 class CursorCommand implements Drawable {
@@ -58,7 +67,7 @@ class CursorCommand implements Drawable {
   }
   display(ctx: CanvasRenderingContext2D) {
     ctx.font = "32px monospace";
-    ctx.fillText("*", this.x - 8, this.y + 16);
+    //ctx.fillText("*", this.x - 8, this.y + 16);
   }
 }
 
@@ -69,15 +78,14 @@ function notify(name: string): void {
 function redraw(ctx: CanvasRenderingContext2D): void {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  commands.forEach(cmd => {
+  commands.forEach((cmd) => {
     cmd.display(ctx);
   });
 
-  /* if (cursorCommand) {
+  if (cursorCommand) {
     cursorCommand.display(ctx);
-  } */
+  }
 }
-
 
 observer.addEventListener("drawing-changed", () => redraw(ctx)!);
 observer.addEventListener("cursor-changed", () => redraw(ctx)!);
@@ -89,7 +97,7 @@ canvas.addEventListener("mouseup", () => {
 });
 
 canvas.addEventListener("mousedown", (event) => {
-  currentLineCommand = new LineCommand(event.offsetX, event.offsetY);
+  currentLineCommand = new LineCommand(event.offsetX, event.offsetY, markerSize);
   commands.push(currentLineCommand);
   redoCommands.splice(0, redoCommands.length);
   //console.log("mousdown");
@@ -109,9 +117,11 @@ canvas.addEventListener("mousemove", (event) => {
   }
 });
 
+const commandContainer: Element = document.querySelector('.Commands')!;
+
 const clearButton = document.createElement("button");
 clearButton.innerHTML = "Clear";
-document.body.append(clearButton);
+commandContainer.append(clearButton);
 
 clearButton.addEventListener("click", () => {
   commands.splice(0, commands.length);
@@ -121,7 +131,7 @@ clearButton.addEventListener("click", () => {
 
 const undoButton = document.createElement("button");
 undoButton.innerHTML = "Undo";
-document.body.append(undoButton);
+commandContainer.append(undoButton);
 
 undoButton.addEventListener("click", () => {
   if (commands.length > 0) {
@@ -133,7 +143,7 @@ undoButton.addEventListener("click", () => {
 
 const redoButton = document.createElement("button");
 redoButton.innerHTML = "Redo";
-document.body.append(redoButton);
+commandContainer.append(redoButton);
 
 redoButton.addEventListener("click", () => {
   if (redoCommands.length > 0) {
@@ -141,4 +151,26 @@ redoButton.addEventListener("click", () => {
 
     notify("drawing-changed");
   }
+});
+
+const toolContainer: Element = document.querySelector('.Tools')!;
+
+const thinMarkerButton = document.createElement("button");
+thinMarkerButton.innerHTML = "Thin Marker";
+toolContainer.append(thinMarkerButton);
+
+thinMarkerButton.addEventListener("click", () => {
+  markerSize = 1;
+
+  notify("cursor-changed");
+});
+
+const thickMarkerButton = document.createElement("button");
+thickMarkerButton.innerHTML = "Thick Marker";
+toolContainer.append(thickMarkerButton);
+
+thickMarkerButton.addEventListener("click", () => {
+  markerSize = 5;
+
+  notify("cursor-changed");
 });
