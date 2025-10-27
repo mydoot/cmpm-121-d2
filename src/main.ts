@@ -66,12 +66,10 @@ class StickerCommand implements Drawable {
     this.points = { x, y };
   }
   display(ctx: CanvasRenderingContext2D): void {
-
     ctx.font = "20px sans-serif";
     ctx.textBaseline = "middle";
     ctx.textAlign = "center";
     ctx.fillText(this.emojiSticker, this.points.x, this.points.y);
-
   }
   changePoints(x: number, y: number) {
     this.points = { x, y };
@@ -165,14 +163,16 @@ canvas.addEventListener("mouseout", () => {
 
 canvas.addEventListener("mouseout", (event) => {
   if (stickerMode) {
-    cursorCommand = new CursorStickerCommand(event.offsetX, event.offsetY, sticker);
-  }
-  else {
+    cursorCommand = new CursorStickerCommand(
+      event.offsetX,
+      event.offsetY,
+      sticker,
+    );
+  } else {
     cursorCommand = new CursorCommand(event.offsetX, event.offsetY);
   }
 
   notify("tool-moved");
-
 });
 
 canvas.addEventListener("mouseup", () => {
@@ -190,8 +190,7 @@ canvas.addEventListener("mousedown", (event) => {
     );
     commands.push(stickerCommand);
     redoCommands.splice(0, redoCommands.length);
-  }
-  else {
+  } else {
     currentLineCommand = new LineCommand(
       event.offsetX,
       event.offsetY,
@@ -205,9 +204,12 @@ canvas.addEventListener("mousedown", (event) => {
 
 canvas.addEventListener("mousemove", (event) => {
   if (stickerMode) {
-    cursorCommand = new CursorStickerCommand(event.offsetX, event.offsetY, sticker);
-  }
-  else {
+    cursorCommand = new CursorStickerCommand(
+      event.offsetX,
+      event.offsetY,
+      sticker,
+    );
+  } else {
     cursorCommand = new CursorCommand(event.offsetX, event.offsetY);
   }
 
@@ -216,8 +218,7 @@ canvas.addEventListener("mousemove", (event) => {
   if (event.buttons == 1) {
     if (!stickerMode) {
       currentLineCommand!.points.push({ x: event.offsetX, y: event.offsetY });
-    }
-    else {
+    } else {
       stickerCommand!.changePoints(event.offsetX, event.offsetY);
     }
     notify("drawing-changed");
@@ -286,8 +287,6 @@ thickMarkerButton.addEventListener("click", () => {
 
   notify("tool-moved");
 });
-
-
 
 let stickerMode: boolean | null = null;
 let stickerCommand: StickerCommand | null = null;
