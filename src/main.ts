@@ -6,6 +6,7 @@ document.body.innerHTML = `
   <div class="Canvas"></div>
   <div class="Commands"></div>
   <div class="Tools"></div>
+  <div class="Stickers"></div>
 `;
 
 const canvasContainer: Element = document.querySelector(".Canvas")!;
@@ -56,6 +57,30 @@ class LineCommand implements Drawable {
   }
 }
 
+class StickerCommand implements Drawable {
+  private emojiSticker: string;
+  private points: Point;
+
+  constructor(x: number, y: number, code: number) {
+    this.emojiSticker = String.fromCodePoint(code);
+    this.points = { x, y };
+  }
+  display(ctx: CanvasRenderingContext2D): void {
+
+    ctx.font = "20px sans-serif";
+    ctx.textBaseline = "middle";
+    ctx.textAlign = "center";
+    ctx.fillText(this.emojiSticker, this.points.x, this.points.y);
+
+  }
+  changePoints(x: number, y: number) {
+    this.points = { x, y };
+  }
+  /*  draw(x: number, y: number): void {
+     //this.points.push({ x, y });
+   } */
+}
+
 // Use this when implementing distinctive marker types (like a scribble vs reg)
 /* class MarkerCommand implements Drawable {
   private markerType: string;
@@ -71,8 +96,8 @@ class LineCommand implements Drawable {
 } */
 
 class CursorCommand implements Drawable {
-  private x: number;
-  private y: number;
+  protected x: number;
+  protected y: number;
 
   constructor(x: number, y: number) {
     this.x = x;
@@ -82,9 +107,9 @@ class CursorCommand implements Drawable {
     ctx.save(); // Isolate the temporary styles
 
     // Set the style for the preview
-    ctx.strokeStyle = 'rgba(0, 0, 0, 0.7)';
+    ctx.strokeStyle = "rgba(0, 0, 0, 0.7)";
     ctx.lineWidth = 1.5;
-    ctx.fillStyle = 'rgba(20, 20, 20, 0.93)';
+    ctx.fillStyle = "rgba(20, 20, 20, 0.93)";
 
     const radius = markerSize / 2;
 
@@ -92,7 +117,24 @@ class CursorCommand implements Drawable {
     // Draw the circle centered at (x, y) with the calculated radius
     ctx.arc(this.x, this.y, radius, 0, 2 * Math.PI);
     ctx.fill();
-    ctx.stroke()
+    ctx.stroke();
+  }
+}
+
+class CursorStickerCommand extends CursorCommand {
+  private sticker: string;
+  constructor(x: number, y: number, code: number) {
+    super(x, y);
+    this.sticker = String.fromCodePoint(code);
+  }
+  override display(ctx: CanvasRenderingContext2D) {
+    // example: draw the sticker centered at x,y
+    ctx.save();
+    ctx.font = "20px sans-serif";
+    ctx.textBaseline = "middle";
+    ctx.textAlign = "center";
+    ctx.fillText(this.sticker, this.x, this.y);
+    ctx.restore();
   }
 }
 
@@ -115,6 +157,24 @@ function redraw(ctx: CanvasRenderingContext2D): void {
 observer.addEventListener("drawing-changed", () => redraw(ctx)!);
 observer.addEventListener("tool-moved", () => redraw(ctx)!);
 
+canvas.addEventListener("mouseout", () => {
+  cursorCommand = null;
+
+  notify("tool-moved");
+});
+
+canvas.addEventListener("mouseout", (event) => {
+  if (stickerMode) {
+    cursorCommand = new CursorStickerCommand(event.offsetX, event.offsetY, sticker);
+  }
+  else {
+    cursorCommand = new CursorCommand(event.offsetX, event.offsetY);
+  }
+
+  notify("tool-moved");
+
+});
+
 canvas.addEventListener("mouseup", () => {
   currentLineCommand = null;
 
@@ -122,26 +182,44 @@ canvas.addEventListener("mouseup", () => {
 });
 
 canvas.addEventListener("mousedown", (event) => {
-  currentLineCommand = new LineCommand(
-    event.offsetX,
-    event.offsetY,
-    markerSize,
-  );
-  commands.push(currentLineCommand);
-  redoCommands.splice(0, redoCommands.length);
-  //console.log("mousdown");
-
+  if (stickerMode) {
+    stickerCommand = new StickerCommand(
+      event.offsetX,
+      event.offsetY,
+      sticker,
+    );
+    commands.push(stickerCommand);
+    redoCommands.splice(0, redoCommands.length);
+  }
+  else {
+    currentLineCommand = new LineCommand(
+      event.offsetX,
+      event.offsetY,
+      markerSize,
+    );
+    commands.push(currentLineCommand);
+    redoCommands.splice(0, redoCommands.length);
+  }
   notify("drawing-changed");
 });
 
 canvas.addEventListener("mousemove", (event) => {
-  cursorCommand = new CursorCommand(event.offsetX, event.offsetY);
+  if (stickerMode) {
+    cursorCommand = new CursorStickerCommand(event.offsetX, event.offsetY, sticker);
+  }
+  else {
+    cursorCommand = new CursorCommand(event.offsetX, event.offsetY);
+  }
 
   notify("tool-moved");
 
   if (event.buttons == 1) {
-    //  console.log("mousemove");
-    currentLineCommand!.points.push({ x: event.offsetX, y: event.offsetY });
+    if (!stickerMode) {
+      currentLineCommand!.points.push({ x: event.offsetX, y: event.offsetY });
+    }
+    else {
+      stickerCommand!.changePoints(event.offsetX, event.offsetY);
+    }
     notify("drawing-changed");
   }
 });
@@ -184,14 +262,17 @@ redoButton.addEventListener("click", () => {
 
 const toolContainer: Element = document.querySelector(".Tools")!;
 
+// Refactor marker buttons with a for loop later
 const thinMarkerButton = document.createElement("button");
 thinMarkerButton.innerHTML = "Thin Marker";
 toolContainer.append(thinMarkerButton);
 
 thinMarkerButton.addEventListener("click", () => {
+  sticker = 0;
+  stickerMode = false;
   markerSize = 1;
 
-  notify("cursor-changed");
+  notify("tool-moved");
 });
 
 const thickMarkerButton = document.createElement("button");
@@ -199,7 +280,50 @@ thickMarkerButton.innerHTML = "Thick Marker";
 toolContainer.append(thickMarkerButton);
 
 thickMarkerButton.addEventListener("click", () => {
+  sticker = 0;
+  stickerMode = false;
   markerSize = 5;
 
-  notify("cursor-changed");
+  notify("tool-moved");
+});
+
+
+
+let stickerMode: boolean | null = null;
+let stickerCommand: StickerCommand | null = null;
+let sticker: number = 0;
+
+const stickerContainer: Element = document.querySelector(".Stickers")!;
+
+const smileyEmojiSticker = document.createElement("button");
+smileyEmojiSticker.innerHTML = "&#128523;";
+stickerContainer.append(smileyEmojiSticker);
+
+smileyEmojiSticker.addEventListener("click", () => {
+  sticker = 128523;
+  stickerMode = true;
+
+  notify("tool-moved");
+});
+
+const peaceEmojiSticker = document.createElement("button");
+peaceEmojiSticker.innerHTML = "&#9996;";
+stickerContainer.append(peaceEmojiSticker);
+
+peaceEmojiSticker.addEventListener("click", () => {
+  sticker = 9996;
+  stickerMode = true;
+
+  notify("tool-moved");
+});
+
+const thumbsupEmojiSticker = document.createElement("button");
+thumbsupEmojiSticker.innerHTML = "&#128077;";
+stickerContainer.append(thumbsupEmojiSticker);
+
+thumbsupEmojiSticker.addEventListener("click", () => {
+  sticker = 128077;
+  stickerMode = true;
+
+  notify("tool-moved");
 });
