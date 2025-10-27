@@ -54,8 +54,21 @@ class LineCommand implements Drawable {
   draw(x: number, y: number): void {
     this.points.push({ x, y });
   }
-
 }
+
+// Use this when implementing distinctive marker types (like a scribble vs reg)
+/* class MarkerCommand implements Drawable {
+  private markerType: string;
+
+
+  constructor(string: string) {
+    this.markerType = string;
+  }
+  display(ctx: CanvasRenderingContext2D) {
+    ctx.font = "32px monospace";
+    //ctx.fillText("*", this.x - 8, this.y + 16);
+  }
+} */
 
 class CursorCommand implements Drawable {
   private x: number;
@@ -66,8 +79,20 @@ class CursorCommand implements Drawable {
     this.y = y;
   }
   display(ctx: CanvasRenderingContext2D) {
-    ctx.font = "32px monospace";
-    //ctx.fillText("*", this.x - 8, this.y + 16);
+    ctx.save(); // Isolate the temporary styles
+
+    // Set the style for the preview
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.7)';
+    ctx.lineWidth = 1.5;
+    ctx.fillStyle = 'rgba(20, 20, 20, 0.93)';
+
+    const radius = markerSize / 2;
+
+    ctx.beginPath();
+    // Draw the circle centered at (x, y) with the calculated radius
+    ctx.arc(this.x, this.y, radius, 0, 2 * Math.PI);
+    ctx.fill();
+    ctx.stroke()
   }
 }
 
@@ -88,7 +113,7 @@ function redraw(ctx: CanvasRenderingContext2D): void {
 }
 
 observer.addEventListener("drawing-changed", () => redraw(ctx)!);
-observer.addEventListener("cursor-changed", () => redraw(ctx)!);
+observer.addEventListener("tool-moved", () => redraw(ctx)!);
 
 canvas.addEventListener("mouseup", () => {
   currentLineCommand = null;
@@ -97,7 +122,11 @@ canvas.addEventListener("mouseup", () => {
 });
 
 canvas.addEventListener("mousedown", (event) => {
-  currentLineCommand = new LineCommand(event.offsetX, event.offsetY, markerSize);
+  currentLineCommand = new LineCommand(
+    event.offsetX,
+    event.offsetY,
+    markerSize,
+  );
   commands.push(currentLineCommand);
   redoCommands.splice(0, redoCommands.length);
   //console.log("mousdown");
@@ -108,7 +137,7 @@ canvas.addEventListener("mousedown", (event) => {
 canvas.addEventListener("mousemove", (event) => {
   cursorCommand = new CursorCommand(event.offsetX, event.offsetY);
 
-  notify("cursor-changed");
+  notify("tool-moved");
 
   if (event.buttons == 1) {
     //  console.log("mousemove");
@@ -117,7 +146,7 @@ canvas.addEventListener("mousemove", (event) => {
   }
 });
 
-const commandContainer: Element = document.querySelector('.Commands')!;
+const commandContainer: Element = document.querySelector(".Commands")!;
 
 const clearButton = document.createElement("button");
 clearButton.innerHTML = "Clear";
@@ -153,7 +182,7 @@ redoButton.addEventListener("click", () => {
   }
 });
 
-const toolContainer: Element = document.querySelector('.Tools')!;
+const toolContainer: Element = document.querySelector(".Tools")!;
 
 const thinMarkerButton = document.createElement("button");
 thinMarkerButton.innerHTML = "Thin Marker";
