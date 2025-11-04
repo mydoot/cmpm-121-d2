@@ -67,7 +67,7 @@ class StickerCommand implements Drawable {
     this.points = { x, y };
   }
   display(ctx: CanvasRenderingContext2D): void {
-    ctx.font = "20px sans-serif";
+    ctx.font = "25px sans-serif";
     ctx.textBaseline = "middle";
     ctx.textAlign = "center";
     ctx.fillText(this.emojiSticker, this.points.x, this.points.y);
@@ -129,7 +129,7 @@ class CursorStickerCommand extends CursorCommand {
   override display(ctx: CanvasRenderingContext2D) {
     // example: draw the sticker centered at x,y
     ctx.save();
-    ctx.font = "20px sans-serif";
+    ctx.font = "25px sans-serif";
     ctx.textBaseline = "middle";
     ctx.textAlign = "center";
     ctx.fillText(this.sticker, this.x, this.y);
@@ -358,7 +358,7 @@ function exportCanvas(): void {
   canvas.width = 1024;
   canvas.height = 1024;
   canvas.className = "canvas";
-  canvas.style.backgroundColor = '#FFFFFF'
+  canvas.style.backgroundColor = "#FFFFFF";
   const ctx = canvas.getContext("2d")!;
   ctx.scale(4, 4);
   /* ctx.fillStyle = "white";
@@ -370,13 +370,10 @@ function exportCanvas(): void {
   anchor.href = canvas.toDataURL("image/png");
   anchor.download = "sketchpad.png";
   anchor.click();
-
 }
 
 exportButton.addEventListener("click", () => {
-
-  exportCanvas()
-
+  exportCanvas();
 
   notify("tool-moved");
 });
