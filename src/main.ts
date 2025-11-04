@@ -7,6 +7,7 @@ document.body.innerHTML = `
   <div class="Commands"></div>
   <div class="Tools"></div>
   <div class="Stickers"></div>
+  <div class="Other"></div>
 `;
 
 const canvasContainer: Element = document.querySelector(".Canvas")!;
@@ -161,7 +162,7 @@ canvas.addEventListener("mouseout", () => {
   notify("tool-moved");
 });
 
-canvas.addEventListener("mouseout", (event) => {
+/* canvas.addEventListener("mouseout", (event) => {
   if (stickerMode) {
     cursorCommand = new CursorStickerCommand(
       event.offsetX,
@@ -173,7 +174,7 @@ canvas.addEventListener("mouseout", (event) => {
   }
 
   notify("tool-moved");
-});
+}); */
 
 canvas.addEventListener("mouseup", () => {
   currentLineCommand = null;
@@ -332,14 +333,50 @@ customSticker.innerHTML = "Custom";
 stickerContainer.append(customSticker);
 
 customSticker.addEventListener("click", () => {
-  const customID = prompt(`Input a custom sticker\n(Must be a UTF-8 emoji )`, "");
+  const customID = prompt(
+    `Input a custom sticker\n(Must be a UTF-8 emoji )`,
+    "",
+  );
   if (customID == null) {
     console.log("User cancelled prompt or inputted an invalid entry.");
-  }
-  else {
+  } else {
     sticker = parseInt(customID);
   }
   stickerMode = true;
+
+  notify("tool-moved");
+});
+
+const otherContainer: Element = document.querySelector(".Other")!;
+
+const exportButton = document.createElement("button");
+exportButton.innerHTML = "Export";
+otherContainer.append(exportButton);
+
+function exportCanvas(): void {
+  const canvas = document.createElement("canvas");
+  canvas.width = 1024;
+  canvas.height = 1024;
+  canvas.className = "canvas";
+  canvas.style.backgroundColor = '#FFFFFF'
+  const ctx = canvas.getContext("2d")!;
+  ctx.scale(4, 4);
+  /* ctx.fillStyle = "white";
+  ctx.fillRect(0, 0, canvas.width, canvas.height); */
+  cursorCommand == null;
+  redraw(ctx);
+
+  const anchor = document.createElement("a");
+  anchor.href = canvas.toDataURL("image/png");
+  anchor.download = "sketchpad.png";
+  anchor.click();
+
+}
+
+exportButton.addEventListener("click", () => {
+
+  exportCanvas()
+
 
   notify("tool-moved");
 });
