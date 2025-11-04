@@ -326,3 +326,20 @@ thumbsupEmojiSticker.addEventListener("click", () => {
 
   notify("tool-moved");
 });
+
+const customSticker = document.createElement("button");
+customSticker.innerHTML = "Custom";
+stickerContainer.append(customSticker);
+
+customSticker.addEventListener("click", () => {
+  const customID = prompt(`Input a custom sticker\n(Must be a UTF-8 emoji )`, "");
+  if (customID == null) {
+    console.log("User cancelled prompt or inputted an invalid entry.");
+  }
+  else {
+    sticker = parseInt(customID);
+  }
+  stickerMode = true;
+
+  notify("tool-moved");
+});
