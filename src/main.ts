@@ -45,6 +45,7 @@ class LineCommand implements Drawable {
     this.thickness = size;
   }
   display(ctx: CanvasRenderingContext2D): void {
+    ctx.strokeStyle = `hsl(${hueValue}, 100%, 50%)`;
     ctx.lineWidth = this.thickness;
     ctx.beginPath();
     const { x, y } = this.points[0];
@@ -107,9 +108,9 @@ class CursorCommand implements Drawable {
     ctx.save(); // Isolate the temporary styles
 
     // Set the style for the preview
-    ctx.strokeStyle = "rgba(0, 0, 0, 0.7)";
+    ctx.strokeStyle = `hsl(${hueValue}, 100%, 50%)`;
     ctx.lineWidth = 1.5;
-    ctx.fillStyle = "rgba(20, 20, 20, 0.93)";
+    ctx.fillStyle = `hsl(${hueValue}, 100%, 50%)`;
 
     const radius = markerSize / 2;
 
@@ -379,9 +380,21 @@ exportButton.addEventListener("click", () => {
   notify("tool-moved");
 });
 
+let hueValue: number | null = null;
+
 const sliderContainer: Element = document.querySelector(".Sliders")!;
 
 const hueSlider = document.createElement("input");
+/* hueSlider.innerHTML = "Hue Slider"; */
 hueSlider.type = "range";
 hueSlider.className = "slider";
+hueSlider.min = "0";
+hueSlider.max = "360";
+hueSlider.value = "0";
 sliderContainer.append(hueSlider);
+
+hueSlider.addEventListener("input", () => {
+  hueValue = parseInt(hueSlider.value);
+
+  notify("tool-moved");
+});

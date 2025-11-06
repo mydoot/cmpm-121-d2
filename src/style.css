@@ -16,7 +16,7 @@
 .slider {
   /* -webkit-appearance: none; */ /* Override default CSS styles */
   appearance: none;
-  width: 100%; /* Full-width */
+  width: 265px; /* Full-width */
   height: 25px; /* Specified height */
   border-radius: 10px;
   background: #d3d3d3; /* Grey background */
@@ -31,7 +31,7 @@
   width: 25px; /* Set a specific slider handle width */
   height: 25px; /* Slider handle height */
   border-radius: 25px;
-  background: #04aa6d; /* Green background */
+  background: #df0287; /* Green background */
   cursor: pointer; /* Cursor on hover */
 }
 
