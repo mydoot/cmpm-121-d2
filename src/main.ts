@@ -6,6 +6,7 @@ document.body.innerHTML = `
   <div class="Canvas"></div>
   <div class="Commands"></div>
   <div class="Tools"></div>
+  <div class="Sliders"></div>
   <div class="Stickers"></div>
   <div class="Other"></div>
 `;
@@ -377,3 +378,10 @@ exportButton.addEventListener("click", () => {
 
   notify("tool-moved");
 });
+
+const sliderContainer: Element = document.querySelector(".Sliders")!;
+
+const hueSlider = document.createElement("input");
+hueSlider.type = "range";
+hueSlider.className = "slider";
+sliderContainer.append(hueSlider);
